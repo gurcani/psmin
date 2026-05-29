@@ -1,14 +1,19 @@
 import numpy as np
-import cupy as xp
-import mlsarray.mlsarray as mls
 import os
+mls_backend="numpy"
+
+os.environ['MLSARRAY_BACKEND']=mls_backend
+if mls_backend=="cupy":
+    import cupy as xp 
+else: 
+    import numpy as xp
+
+import gsol.mlsarray.mlsarray as mls
 import h5py as h5
 from time import time
-#from mlsarray.mlsarray import init_kspace_grid,slicelist,irft,rft
-from etdrk4cp.gsol import gsol,callbacks
-from etdrk4cp.etdrk4cp import etdrk4cp
-from etdrk4cp.h5tools import save_data
-
+from gsol.gsol import gsol
+from gsol.gsol import callbacks
+from gsol.h5tools import save_data
 # Physics Paramteres
 C=1.0
 kap=1.0
@@ -20,7 +25,6 @@ flname="out.h5"
 wecontinue=False
 Npx,Npy=1024,1024
 t0,t1=0,500.0
-tol=1e-8
 Nx,Ny=2*int(np.floor(Npx/3)),2*int(np.floor(Npy/3))
 Lx,Ly=12*np.pi,12*np.pi
 dkx,dky=2*np.pi/Lx,2*np.pi/Ly
@@ -106,9 +110,9 @@ fcbs = [(lambda t,y : print('t=',t,', ',time()-ct,' secs elapsed')),
 dtstep=1.0
 dtcbs=[1.0,1.0,10.0]
 cbs=callbacks(dtcbs,fcbs)
-
 # initiate and run the solver
-r=gsol(rhsnl,t0,zk0.ravel(),t1,Lk,dtstep,callbacks=cbs,tol=tol,M=64,maxstep=dtstep)
+r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="etdrk4cp",tol=1e-8)
+#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy.DOP853",atol=1e-12,rtol=1e-9)
+#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv=solver,atol=1e-8,rtol=1e-7)
 r.run()
-
 fl.close()
