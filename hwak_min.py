@@ -22,7 +22,7 @@ D=5e-4
 
 # Simulation Parameters
 flname="out.h5"
-wecontinue=False
+wecontinue=True
 Npx,Npy=1024,1024
 t0,t1=0,500.0
 Nx,Ny=2*int(np.floor(Npx/3)),2*int(np.floor(Npy/3))
@@ -115,8 +115,8 @@ fcbs = [(lambda t,y : print('t=',t,', ',time()-ct,' secs elapsed')),
 dtcbs=[1.0,1.0,10.0]
 cbs=callbacks(dtcbs,fcbs,tnexts)
 # initiate and run the solver
-#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="etdrk4cp",tol=1e-8)
+r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="etdrk4cp",tol=1e-8)
 #r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy.DOP853",atol=1e-12,rtol=1e-9)
-r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy_old.vode",atol=1e-8,rtol=1e-7)
+#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy_old.vode",atol=1e-8,rtol=1e-7)
 r.run()
 fl.close()
