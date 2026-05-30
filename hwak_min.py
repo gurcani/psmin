@@ -22,7 +22,7 @@ D=5e-4
 
 # Simulation Parameters
 flname="out.h5"
-wecontinue=True
+wecontinue=False
 Npx,Npy=1024,1024
 t0,t1=0,500.0
 Nx,Ny=2*int(np.floor(Npx/3)),2*int(np.floor(Npy/3))
