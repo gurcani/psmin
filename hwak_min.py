@@ -22,7 +22,7 @@ D=5e-4
 
 # Simulation Parameters
 flname="out.h5"
-wecontinue=False
+wecontinue=True
 Npx,Npy=1024,1024
 t0,t1=0,500.0
 Nx,Ny=2*int(np.floor(Npx/3)),2*int(np.floor(Npy/3))
@@ -73,7 +73,7 @@ def rhsnl(t,zk):
 def save_callback(fl,t,zk,flag):
     phink=zk.reshape((2,kx.size))
     phik,nk=phik,nk=phink[0,:],phink[1,:]
-    save_data(fl,'last',ext_flag=False,zk=get(zk),t=get(t))
+    save_data(fl,'last',ext_flag=False,zk=get(zk),t=get(t),dt=r.hlast,tnexts=r.cbs.tnexts)
     if flag=='fields':
         print('saving fields')
         om=irft(-phik*(kx**2+ky**2))
@@ -91,28 +91,32 @@ def save_callback(fl,t,zk,flag):
 if(wecontinue):
     fl=h5.File(flname,'r+',libver='latest')
     fl.swmr_mode = True
-    omk,nk=rft(xp.array(fl['fields/om'][-1,])),rft(xp.array(fl['fields/n'][-1,]))
-    phik=-omk/(kx**2+ky**2)
-    t0=fl['fields/t'][-1]
-    zk0=xp.hstack((phik,nk))
+    zk0=fl['last/zk'][()]
+#    omk,nk=rft(xp.array(fl['fields/om'][-1,])),rft(xp.array(fl['fields/n'][-1,]))
+#    phik=-omk/(kx**2+ky**2)
+    t0=fl['last/t'][()]
+    tnexts=fl['last/tnexts'][()]
+    dtstep=fl['last/dt'][()]
+#    zk0=xp.hstack((phik,nk))
 else:
     if os.path.exists(flname):
         os.remove(flname)
     fl=h5.File(flname,'w',libver='latest')
     fl.swmr_mode = True
     save_data(fl,'data',ext_flag=False,kap=kap,C=C,nu=nu,D=D,Lx=Lx,Ly=Ly)
+    dtstep=1.0
+    tnexts=None
 
 # define callbacks
 ct=time()
 fcbs = [(lambda t,y : print('t=',t,', ',time()-ct,' secs elapsed')),
         (lambda t,y : save_callback(fl,t,y,flag='fields')),
          (lambda t,y : save_callback(fl,t,y,flag='energies'))]
-dtstep=1.0
 dtcbs=[1.0,1.0,10.0]
-cbs=callbacks(dtcbs,fcbs)
+cbs=callbacks(dtcbs,fcbs,tnexts)
 # initiate and run the solver
-r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="etdrk4cp",tol=1e-8)
+#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="etdrk4cp",tol=1e-8)
 #r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy.DOP853",atol=1e-12,rtol=1e-9)
-#r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv=solver,atol=1e-8,rtol=1e-7)
+r=gsol(rhsnl,t0,zk0,t1,Lk,dtstep,callbacks=cbs,sv="scipy_old.vode",atol=1e-8,rtol=1e-7)
 r.run()
 fl.close()
