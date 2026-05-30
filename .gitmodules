@@ -1,4 +1,0 @@
-[submodule "gsol"]
-	path = gsol
-	url = git@github.com:gurcani/gsol.git
-	branch = main
